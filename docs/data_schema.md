@@ -40,8 +40,8 @@ Use one reference file matching each exported slide filename:
 - `coords`: optional `[N,2]`, identical ordering to prediction coordinates.
 - `patient_id`: optional scalar string for patient-clustered bootstrap.
 
-The rasterizer consumes independently exported pathologist masks, never
-CONCH pseudo-labels. It requires the true level-zero patch footprint size,
-mask downsample and either a validity mask or an explicit fully-annotated
+The rasterizer consumes pathologist annotation masks. It requires the
+level-zero patch footprint size, mask downsample and either a validity mask
+or an explicit fully-annotated
 flag. It rejects overlapping footprints. Record official train/test inclusion
 lists and mask export provenance. Only the Tumor family is scored.

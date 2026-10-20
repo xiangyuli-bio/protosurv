@@ -1,6 +1,6 @@
 # Prior-guided WSI survival model
 
-Review-stage reference implementation for soft histopathologic priors, tissue
+Implementation of soft histopathologic priors, tissue
 prototypes, sparse graph context and patient-level Cox survival prediction.
 
 ## Install and verify
@@ -13,11 +13,9 @@ pytest -q
 ruff check protosurv scripts tests --select E9,F
 ```
 
-The source contains no cohort data or restricted foundation-model weights.
-Patch extraction and authorized CONCH image/text encoding are upstream steps.
-The repository converts cached embeddings to priors and provides the core
-training, inference and evaluation pipeline. Record the exact encoder release,
-preprocessing, prompt set and feature manifests for every measured run.
+The pipeline takes cached patch features and CONCH image/text embeddings as
+inputs, converts the embeddings to priors, and supports training, inference
+and evaluation. Patch extraction and CONCH encoding precede these steps.
 `configs/prompts.json` matches the manuscript's three prompts per tissue class.
 
 ## Inputs
@@ -49,10 +47,10 @@ fold histories and a seed-averaged outer-fold mean/sample SD. Use
 `configs/tcga_hard.yaml` for the hard-prior counterpart with exactly the same
 patient folds. Splitting randomness is fixed independently of training seeds.
 Checkpoint metadata records all source patient IDs and source-training risk
-normalization statistics. The full training-fold Cox objective retains
-activations; its training memory differs from single-slide inference memory.
+normalization statistics. The Cox objective is evaluated over the full
+training fold.
 
-## Revision evaluations
+## Evaluation
 
 [revision_experiments.md](docs/revision_experiments.md) provides executable
 commands for CPTAC transfer, paired patient bootstrap, k/radius retraining,
@@ -64,20 +62,15 @@ Attention export writes raw prototype maps plus `class_attention [N,5]`.
 For each checkpoint, prototypes are averaged within class and min-max
 normalized before ensembling. The default localization evaluator consumes
 `class_attention` without a second normalization. Constant maps have zero
-scores. Legacy single-model `attention` inputs remain supported explicitly.
+scores. Single-model `attention` inputs are also supported.
 
 Independent annotations contain fractional tumor occupancy and patch area.
 This preserves raster mask area instead of assigning one hard tumor label to
 a mixed patch. Incomplete reference coverage is excluded. Calibration/test
-partitions remain separate. Bootstrap intervals use patient IDs when supplied
-and otherwise explicitly use slides as the resampling units.
+partitions remain separate. Bootstrap intervals resample patients when
+patient IDs are supplied, and slides otherwise.
 
-## Scope and evidence
+## License
 
-A synthetic smoke check establishes software execution, not external
-prognostic performance. No illustrative clinical C-index, IoU or GPU latency
-is supplied as a measured result. Published numeric results require actual
-cohort inputs, fixed checkpoints, manifests and generated reports. GPU
-operations can be nondeterministic across environments; save seeds, software
-versions and artifact checksums with each run. See [NOTICE.md](NOTICE.md) and
-[LICENSE](LICENSE) for source and third-party terms.
+See [LICENSE](LICENSE) for the MIT License and [NOTICE.md](NOTICE.md) for
+third-party terms and attribution.

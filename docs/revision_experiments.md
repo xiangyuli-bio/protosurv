@@ -1,7 +1,5 @@
-# Revision experiments: commands and required outputs
+# Evaluation workflows
 
-Experimental claims require generated reports from real inputs.
-The source package's synthetic checks do not supply clinical or RTX 3090 data.
 All commands run from the repository root after installation.
 
 ## 1. Fixed source models and independent CPTAC-LUAD transfer
@@ -25,15 +23,14 @@ python -m scripts.compare_external_predictions \
 ```
 
 The JSON reports contain patient/slide/event counts, observed-time range,
-reverse-KM median follow-up, C-index and 95% patient-bootstrap CI. If the
-reverse-KM median is unreached, report that explicitly. The paired comparison
-uses identical patient bootstrap indices for both methods. Source-patient
-IDs and source risk-normalization statistics are mandatory in checkpoints.
+reverse-KM median follow-up, C-index and 95% patient-bootstrap CI. The paired
+comparison uses identical patient bootstrap indices for both methods.
+Source-patient IDs and source risk-normalization statistics are required
+in checkpoints.
 Record the exact clinical release, identifier linkage, time units, eligible
 patient list and exclusions. Run baseline external predictions on this same
 patient list with identical ensembling; baseline model implementations are
-obtained from the respective published source packages and are not silently
-substituted by the proposed model.
+obtained from the respective published source packages.
 
 ## 2. k/radius sensitivity on all five cohorts
 
@@ -50,15 +47,15 @@ slides in each fold. HDF5 coordinates are level-zero centres; `mpp` or
 `pixel_spacing` is required. The output contains fold-specific radii in
 micrometres, non-self degree summaries, per-fold/seed metrics, mean and sample
 SD over the five seed-averaged test-fold estimates. Patient splits are fixed
-across all variants. Do not choose the best k using outer test outcomes.
+across all variants. Use internal validation for k selection and reserve
+outer test folds for evaluation.
 
 ## 3. CAMELYON16 localization with independent reference masks
 
-Export independent official annotation masks at a recorded raster scale.
-Do not use model-generated labels as the reference. Generate one annotation
-NPZ per retained feature file, separately for official training and test
-partitions. Example values below describe file geometry and must be replaced
-with the actual level-zero footprint and mask scale:
+Export official annotation masks at a recorded raster scale. Generate one
+annotation NPZ per retained feature file, separately for official training
+and test partitions. Set the level-zero patch footprint and mask scale to
+match the input files; the example below uses 512 and 32, respectively:
 
 ```bash
 python -m scripts.rasterize_annotations \
@@ -82,20 +79,20 @@ python -m scripts.evaluate_localization \
 
 Export the calibration maps separately using the official training CSV.
 Repeat with fixed hard-prior checkpoints and the hard configuration.
-For the original CONCH prior use `--score-key priors`. Record the actual
+For the original CONCH prior use `--score-key priors`. Record the
 calibration/test positive/negative counts, global method thresholds, raster
-provenance and exclusions. `class_attention` is already normalized within
-each checkpoint before ensembling and must not be normalized a second time.
+provenance and exclusions. Use `class_attention` directly: it is normalized
+within each checkpoint before ensembling.
 Add `patient_id` to reference NPZ files when known so uncertainty is clustered
 by patient; otherwise describe the bootstrap as slide-level. Fractional tumor
 occupancy preserves mixed patch boundaries. The report supplies tumor IoU,
 precision over exactly 20% of evaluated tissue area, negative-slide area and
-bootstrap intervals. It does not validate causal survival attribution.
+bootstrap intervals.
 
 ## 4. Downstream RTX 3090 runtime
 
-Use a cached real slide with at least 40,000 tissue patches and its matching
-preconstructed graph. Run on one RTX 3090 with the actual trained checkpoint:
+Use a cached slide with at least 40,000 tissue patches and its matching
+preconstructed graph. Run on one RTX 3090 with a trained checkpoint:
 
 ```bash
 python -m scripts.benchmark --config configs/tcga.yaml \
@@ -109,15 +106,8 @@ Set the YAML device to the intended CUDA device. The command uses increasing
 prefixes of the same feature file and induced edge subsets; record this
 sampling rule and realized edge counts. It synchronizes CUDA around each run
 and reports median/IQR latency, all individual timings and peak allocated
-memory in decimal GB (1 GB = 10^9 bytes). Features, model and graph are resident before timing. Encoder
-inference, graph construction and data transfer are excluded. Training peak
-memory is a separate measurement. A run without `--input-h5` is labelled
-synthetic; a run without `--checkpoint` is labelled randomly initialized.
-Neither should be described as trained-model real-slide performance.
-
-## 5. Reviewer-accessible code
-
-Upload the prepared source archive to an anonymous repository. Verify access
-in a signed-out browser and record an immutable release/commit and archive
-SHA-256. Cite the verified repository address only after it is accessible to reviewers.
-The local archive is ready for hosting but does not create a public link.
+memory in decimal GB (1 GB = 10^9 bytes). Features, model and graph are
+resident before timing. Encoder inference, graph construction and data
+transfer are excluded. Training peak memory is measured separately.
+Omitting `--input-h5` uses synthetic features; omitting `--checkpoint` uses
+randomly initialized weights. Both settings are recorded in the output.

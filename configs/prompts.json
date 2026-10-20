@@ -1,0 +1,27 @@
+{
+  "Tumor": [
+    "a histopathology image of tumor tissue",
+    "malignant epithelial tumor cells in H&E tissue",
+    "neoplastic tumor region on a whole-slide image"
+  ],
+  "Stroma": [
+    "a histopathology image of stromal tissue",
+    "fibrous connective tissue and desmoplastic stroma",
+    "collagen-rich tumor-associated stroma in H&E tissue"
+  ],
+  "Immune Infiltration": [
+    "a histopathology image with immune cell infiltration",
+    "lymphocyte-rich inflammatory infiltrate in tissue",
+    "tumor microenvironment with dense immune cells"
+  ],
+  "Necrosis": [
+    "a histopathology image of necrotic tissue",
+    "necrotic tumor debris and cell death in H&E tissue",
+    "acellular necrotic region with eosinophilic debris"
+  ],
+  "Others": [
+    "background, artifact, or non-informative tissue region",
+    "tissue region not described by tumor, stroma, immune, or necrosis",
+    "residual mixed or low-confidence histology on a whole-slide image"
+  ]
+}
